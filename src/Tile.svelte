@@ -19,7 +19,7 @@
 	}
 	const savedRandomVersions = {};
 	function getTileset(type) {
-			const list = types[type];
+			const list = types[type] || [type, type]; // todo: DEBUG
 			if (list === undefined) {
 				throw Error(`unknown tile type '${type}'`)
 			}

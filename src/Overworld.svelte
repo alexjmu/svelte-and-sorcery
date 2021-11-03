@@ -4,18 +4,17 @@
 	import Tile from './Tile.svelte';
 	import Controls from './Controls.svelte';
 	
-	import { getTileAt, playerLocation, walkDirection } from './worldmap.js';
+	import { getIconAt, playerLocation, walkDirection } from './worldmap.js';
 	
-	let location = playerLocation;
-	function idxToLocation({location, idx}) {
-		let yDiff = Math.floor(idx / 11);
-		let xDiff = idx % 11;
+	let curLocation = playerLocation;
+	$: { console.log('I have moved to', curLocation); }
+	function idxToMap({ loc, idx }) {
+		let yDiff = idx % 11; // cells run top to bottom
+		let xDiff = Math.floor(idx / 11);
 		// view is 11 by 11, player should be centred
-		const centerX = 5;
-		const centerY = 5;
 		return {
-			x: location.x - 5 + xDiff,
-			y: location.y - 5 + yDiff
+			x: loc.x - 5 + xDiff,
+			y: loc.y - 5 + yDiff
 		}
 	}
 	
@@ -24,6 +23,11 @@
 		const interval = setInterval(() => { frame = frame + 1 }, 1000)
 		return () => clearInterval(interval)
 	});
+
+	function tick() {
+		// TODO
+		console.warn('tick() not impl');
+	}
 	
 // thoughts: maybe scroll left/right instead of moving K? i.e. view is an nxn array projection from
 // an NxN world
@@ -37,18 +41,19 @@
 // thought: all player state could be a writeable store that tracks history?
 </script>
 
-<Controls on:left="{() => { location = walkDirection({location, direction: 'left'})}}"
-					on:right="{() => { location = walkDirection({location, direction: 'right'})}}"
-					on:up="{() => { location = walkDirection({location, direction: 'up'})}}"
-					on:down="{() => { location = walkDirection({location, direction: 'down'}) }}"
-					/>
+<Controls
+	on:left="{() => { curLocation = walkDirection({location: curLocation, direction: 'left'}) }}"
+	on:right="{() => { curLocation = walkDirection({location: curLocation, direction: 'right'}) }}"
+	on:up="{() => { curLocation = walkDirection({location: curLocation, direction: 'up'}) }}"
+	on:down="{() => { curLocation = walkDirection({location: curLocation, direction: 'down'}) }}"
+/>
 <div id="view">
 <h1>
 	Overworld
 </h1>
 <div id="grid">
-		{#each Array.from({length: 11 * 11}) as cell, idx}
-				<Tile switched="{frame % 2 === 0}" type="{getTileAt(idxToLocation({location, idx})) || null}" />
+	{#each Array.from({length: 11 * 11}) as _cell, idx}
+		<!-- <pre>{`${idx}|`}</pre>--><Tile switched="{frame % 2 === 0}" type="{getIconAt(idxToMap({ loc: curLocation, idx })) || null}" />
 	{/each}
 </div>
 	<pre>use arrow keys to move</pre>

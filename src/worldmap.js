@@ -1,5 +1,7 @@
-'use strict';
+"use strict";
 
+// NxN array of arrays with a tile map for each level (e.g. [mob, floor])
+// 'tiles' contain { icon } -> info about the character or glyph that represents them
 const worldmap = `
 #G_#_,,#GG#.................................
 #__#______#.................................
@@ -48,43 +50,58 @@ __________#.G...............................
 ............................................
 ............................................
 ............................................
-`.trim().split('\n').map((l) => Array.from(l.trim()))
+`
+  .trim()
+  .split("\n")
+  .map((l) => Array.from(l.trim()))
+  .map((row, _yIdx) =>
+    row.map((icon, _xIdx) =>
+      isPlatform(icon) ? [{ icon }] : [{ icon }, defaultTile()]
+    )
+  );
 
-const playerLocation = {x: 5, y: 15};
-
-const swapTiles = ({location1, location2}) => {
-	const tile1 = getTileAt(location1);
-	const tile2 = getTileAt(location2);
-	setTileAt({location: location2, tile: tile1});
-	setTileAt({location: location1, tile: tile2});
-	return {tile1, tile2};
+function isPlatform(icon) {
+  return [".", "_", "#"].includes(icon);
 }
-
-const getTileAt = ({x, y}) => worldmap[x] && worldmap[x][y]
-const setTileAt = ({location, tile}) => {
-	if (getTileAt(location)) {
-		worldmap[location.x][location.y] = tile;
-		return tile;
-	} else {
-		return undefined;
-	}
+function defaultTile() {
+  return { icon: "." };
 }
-const walkDirection = ({location, direction}) => {
-	const move = {
-		'left': {x: 0, y: -1},
-		'right': {x: 0, y: 1},
-		'up': {x: -1, y: 0},
-		'down': {x: 1, y: 0}
-	}[direction]
-	const newLoc = {x: location.x + move.x, y: location.y + move.y}
-	swapTiles({location1: location, location2: newLoc});
-	console.log(newLoc);
-	return newLoc;
+const playerLocation = { x: 15, y: 5 };
+
+const getIconAt = ({ x, y }) => worldmap[y]?.[x]?.[0]?.icon;
+const popTileAt = ({ x, y }) => worldmap[y]?.[x]?.shift() || { icon: "0" };
+const placeTileAt = ({ tile, location }) =>
+  tile && worldmap[location.y]?.[location.x]?.unshift(tile) && location;
+const moveTile = ({ from, to }) => {
+  console.log(from, to);
+  const tile = popTileAt({ ...from });
+  return placeTileAt({ tile, location: to });
+};
+const walkDirection = ({ location, direction }) => {
+  const moveVector =
+    {
+      left: { x: -1, y: 0 },
+      right: { x: 1, y: 0 },
+      up: { x: 0, y: -1 },
+      down: { x: 0, y: 1 },
+    }[direction] ||
+    (() => {
+      throw Error(`bad direction '${direction}'`);
+    })();
+  const targetLocation = {
+    x: location.x + moveVector.x,
+    y: location.y + moveVector.y,
+  };
+
+  const finalLocation =
+    moveTile({
+      from: location,
+      to: targetLocation,
+    }) || location;
+
+  console.log("walking", location, targetLocation, finalLocation);
+
+  return finalLocation;
 };
 
-export {
-  getTileAt,
-	setTileAt,
-	playerLocation,
-	walkDirection
-}
+export { getIconAt, walkDirection, playerLocation };
