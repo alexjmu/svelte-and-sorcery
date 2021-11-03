@@ -53,7 +53,7 @@
 </h1>
 <div id="grid">
 	{#each Array.from({length: 11 * 11}) as _cell, idx}
-		<!-- <pre>{`${idx}|`}</pre>--><Tile switched="{frame % 2 === 0}" type="{getIconAt(idxToMap({ loc: curLocation, idx })) || null}" />
+		<Tile switched="{frame % 2 === 0}" type="{getIconAt(idxToMap({ loc: curLocation, idx })) || null}" />
 	{/each}
 </div>
 	<pre>use arrow keys to move</pre>
