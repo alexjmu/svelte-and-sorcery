@@ -14,7 +14,7 @@ __________#.G...............................
 #__G______#.T.......TT......................
 #GG______G#........T........................
 ###########......TTT........................
-................T............................
+................T...........................
 ............TT..T...........................
 ............................................
 ............................................
@@ -61,23 +61,35 @@ __________#.G...............................
   );
 
 function isPlatform(icon) {
-  return [".", "_", "#"].includes(icon);
+  return [".", "_"].includes(icon) || icon === "+";
 }
 function defaultTile() {
   return { icon: "." };
 }
+function emptyTile() {
+  return { icon: "0" };
+}
 const playerLocation = { x: 15, y: 5 };
 
 const getIconAt = ({ x, y }) => worldmap[y]?.[x]?.[0]?.icon;
-const popTileAt = ({ x, y }) => worldmap[y]?.[x]?.shift() || { icon: "0" };
+const popTileAt = ({ x, y }) => worldmap[y]?.[x]?.shift() || emptyTile();
 const placeTileAt = ({ tile, location }) =>
-  tile && worldmap[location.y]?.[location.x]?.unshift(tile) && location;
+  (tile !== undefined ||
+    (() => {
+      throw Error(`cannot place undefined tile at ${location}`);
+    })()) &&
+  worldmap[location.y]?.[location.x]?.unshift(tile) &&
+  location;
+
+const canMoveOver = ({ x, y }) => isPlatform(getIconAt({ x, y }));
 const moveTile = ({ from, to }) => {
-  console.log(from, to);
-  const tile = popTileAt({ ...from });
-  return placeTileAt({ tile, location: to });
+  if (canMoveOver({ ...to })) {
+    const tile = popTileAt({ ...from });
+    return placeTileAt({ tile, location: to });
+  }
 };
-const walkDirection = ({ location, direction }) => {
+
+const getAdjacentLocation = ({ location, direction }) => {
   const moveVector =
     {
       left: { x: -1, y: 0 },
@@ -88,18 +100,19 @@ const walkDirection = ({ location, direction }) => {
     (() => {
       throw Error(`bad direction '${direction}'`);
     })();
-  const targetLocation = {
+  return {
     x: location.x + moveVector.x,
     y: location.y + moveVector.y,
   };
+};
 
+const walkDirection = ({ location, direction }) => {
+  const target = getAdjacentLocation({ location, direction });
   const finalLocation =
     moveTile({
       from: location,
-      to: targetLocation,
+      to: target,
     }) || location;
-
-  console.log("walking", location, targetLocation, finalLocation);
 
   return finalLocation;
 };
