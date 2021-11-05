@@ -1,0 +1,9 @@
+{
+  "transform": {
+    "^.+\\.js$": "rollup-jest",
+    "^.+\\.svelte$": "svelte-jester"
+  },
+  "moduleFileExtensions": ["js", "svelte"],
+  "setupFilesAfterEnv": ["@testing-library/jest-dom/extend-expect"],
+  "testEnvironment": "jsdom"
+}
