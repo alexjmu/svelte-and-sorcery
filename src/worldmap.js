@@ -2,7 +2,7 @@
 
 // NxN array of arrays with a tile map for each level (e.g. [mob, floor])
 // 'tiles' contain { icon } -> info about the character or glyph that represents them
-const worldmap = `
+const { worldmap } = parseMap(`
 #G_#_,,#GG#TTTT..TTTT.......................
 #__#______#..........T......................
 #UU#______#............T....................
@@ -50,15 +50,24 @@ __________#.G...............................
 ............................................
 ............................................
 ............................................
-`
-  .trim()
-  .split("\n")
-  .map((l) => Array.from(l.trim()))
-  .map((row, _yIdx) =>
-    row.map((icon, _xIdx) =>
-      isPlatform(icon) ? [{ icon }] : [{ icon }, defaultTile()]
-    )
-  );
+`);
+
+function parseMap(mapString2D) {
+  const mapArray = mapString2D
+    .trim()
+    .split("\n")
+    .map((l) => Array.from(l.trim()))
+    .map((row, _yIdx) =>
+      row.map((icon, _xIdx) =>
+        isPlatform(icon) ? [{ icon }] : [{ icon }, defaultTile()]
+      )
+    );
+
+  return {
+    worldmap: mapArray,
+    asString: () => "",
+  };
+}
 
 function isPlatform(icon) {
   return [".", "_"].includes(icon) || icon === "+";
@@ -117,4 +126,4 @@ const walkDirection = ({ location, direction }) => {
   return finalLocation;
 };
 
-export { getIconAt, walkDirection, playerLocation };
+export { getIconAt, walkDirection, parseMap, playerLocation };

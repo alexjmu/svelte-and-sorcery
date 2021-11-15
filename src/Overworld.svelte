@@ -7,7 +7,6 @@
 	import { getIconAt, playerLocation, walkDirection } from './worldmap.js';
 	
 	let curLocation = playerLocation;
-	$: { console.log('I have moved to', curLocation); }
 	function idxToMap({ loc, idx }) {
 		let yDiff = idx % 11; // cells run top to bottom
 		let xDiff = Math.floor(idx / 11);
