@@ -65,7 +65,10 @@ function parseMap(mapString2D) {
 
   return {
     worldmap: mapArray,
-    asString: () => "",
+    asString: () =>
+      mapArray
+        .map((row) => row.map((tile) => getTopIcon(tile)).join(""))
+        .join("\n"),
   };
 }
 
@@ -77,6 +80,9 @@ function defaultTile() {
 }
 function emptyTile() {
   return { icon: "0" };
+}
+function getTopIcon(tile) {
+  return tile[0]?.icon;
 }
 const playerLocation = { x: 15, y: 5 };
 
