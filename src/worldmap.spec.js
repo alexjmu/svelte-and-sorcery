@@ -1,6 +1,6 @@
 import world from "./worldmap";
 
-describe("world", () => {
+describe("worldmap", () => {
   describe("given a valid map string", () => {
     [
       `
@@ -31,19 +31,71 @@ describe("world", () => {
       });
     });
   });
-  //   describe("given an empty map", () => {
-  //     const map = world.parseMap(`
-  //         ...
-  //         ...
-  //         ...`);
-  //     describe("when I move right", () => {
-  //       const newMap = map.move('right')
-  //       expect(newMap.asString()).toEqual(world.parseMap())
-  //     });
-  //   });
+
+  describe("given a map with no player tile", () => {
+    const map = world.parseMap(`
+          ...
+          ...
+          ...`);
+    describe("when move is given", () => {
+      const newMap = map.move("right");
+      it("should change nothing", () => {
+        expect(newMap).toEqual(map);
+      });
+    });
+  });
+
+  describe("given a map with a player tile", () => {
+    const map = world.parseMap(`
+        ...
+        .K.
+        ...
+      `);
+    [
+      [
+        "right",
+        `
+        ...
+        ..K
+        ...
+        `,
+      ],
+      [
+        "left",
+        `
+        ...
+        K..
+        ...
+        `,
+      ],
+      [
+        "up",
+        `
+        .K.
+        ...
+        ...
+        `,
+      ],
+      [
+        "down",
+        `
+        ...
+        ...
+        .K.
+        `,
+      ],
+    ].forEach(([direction, expectedMap]) => {
+      describe(`on move ${direction}`, () => {
+        const newMap = map.move(direction);
+        it(`should move player one tile ${direction}`, () => {
+          expectMap(newMap, expectedMap);
+        });
+      });
+    });
+  });
 });
 
-function expectMapEquals(map, repr) {
+function expectMap(map, repr) {
   expect(map.asString()).toEqual(world.parseMap(repr).asString());
 }
 

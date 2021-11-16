@@ -2,7 +2,7 @@
 
 // NxN array of arrays with a tile map for each level (e.g. [mob, floor])
 // 'tiles' contain { icon } -> info about the character or glyph that represents them
-const { worldmap } = parseMap(`
+const globalMap = parseMap(`
 #G_#_,,#GG#TTTT..TTTT.......................
 #__#______#..........T......................
 #UU#______#............T....................
@@ -52,6 +52,8 @@ __________#.G...............................
 ............................................
 `);
 
+const { worldmap } = globalMap;
+
 function parseMap(mapString2D) {
   const mapArray = mapString2D
     .trim()
@@ -62,16 +64,53 @@ function parseMap(mapString2D) {
         isPlatform(icon) ? [{ icon }] : [{ icon }, defaultTile()]
       )
     );
+  const coordTilePairs = mapArray
+    .map((row, yIdx) =>
+      row.map((tile, xIdx) => [{ x: xIdx, y: yIdx }, tile[0]?.icon])
+    )
+    .flat(1);
+
+  const [foundPlayerCoords, _icon] = coordTilePairs.filter(
+    ([_coords, icon]) => {
+      return icon === "K";
+    }
+  )[0] || [undefined, ""];
 
   return {
     worldmap: mapArray,
-    asString: () =>
-      mapArray
+    playerLocation: foundPlayerCoords,
+    asString: function () {
+      return this.worldmap
         .map((row) => row.map((tile) => getTopIcon(tile)).join(""))
-        .join("\n"),
+        .join("\n");
+    },
+    move: function (direction) {
+      if (this.playerLocation === undefined) {
+        return { ...this };
+      }
+      const target = getAdjacentLocation({
+        location: this.playerLocation,
+        direction,
+      });
+      const mapCopy = {
+        ...this,
+        worldmap: this.worldmap.map((row) =>
+          row.map((tile) => tile.map((obj) => ({ ...obj })))
+        ),
+      };
+      const playerTile =
+        mapCopy.worldmap?.[this.playerLocation.y]?.[
+          this.playerLocation.x
+        ]?.shift();
+      mapCopy.worldmap?.[target.y]?.[target.x]?.unshift(playerTile);
+      return mapCopy;
+    },
   };
 }
 
+function isPlayer(icon) {
+  return icon === "K";
+}
 function isPlatform(icon) {
   return [".", "_"].includes(icon) || icon === "+";
 }
