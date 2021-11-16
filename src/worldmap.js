@@ -55,7 +55,27 @@ __________#.G...............................
 const { worldmap } = globalMap;
 
 function parseMap(mapString2D) {
-  const mapArray = mapString2D
+  const tileMap = stringToTileMap(mapString2D);
+  const playerStartingLocation = findPlayerInMap(tileMap);
+
+  return {
+    worldmap: tileMap,
+    playerLocation: playerStartingLocation,
+    asString: function () {
+      return tileMapToString(this.worldmap);
+    },
+    move: function (direction) {
+      return applyMoveToMap({
+        map: this,
+        startLocation: this.playerLocation,
+        direction,
+      });
+    },
+  };
+}
+
+function stringToTileMap(mapString2D) {
+  return mapString2D
     .trim()
     .split("\n")
     .map((l) => Array.from(l.trim()))
@@ -64,48 +84,57 @@ function parseMap(mapString2D) {
         isPlatform(icon) ? [{ icon }] : [{ icon }, defaultTile()]
       )
     );
-  const coordTilePairs = mapArray
-    .map((row, yIdx) =>
-      row.map((tile, xIdx) => [{ x: xIdx, y: yIdx }, tile[0]?.icon])
-    )
+}
+
+function tileMapToString(tileMap) {
+  return tileMap
+    .map((row) => row.map((tile) => getTopIcon(tile)).join(""))
+    .join("\n");
+}
+
+function findPlayerInMap(tileMap) {
+  const [foundPlayerCoordinates, _] = mapToCoordinateTilePairs(tileMap)
+    .map(([coord, tile]) => [coord, tile[0].icon])
+    .filter(([_, icon]) => isPlayer(icon))[0] || [undefined, undefined];
+
+  return foundPlayerCoordinates;
+}
+
+function applyMoveToMap({ map, startLocation, direction }) {
+  const mapCopy = deepCopyMap(map);
+  if (startLocation === undefined) {
+    return mapCopy;
+  }
+  const startTile = getTileAt({ location: startLocation, map: mapCopy });
+
+  const target = getAdjacentLocation({
+    location: startLocation,
+    direction,
+  });
+  const targetTile = getTileAt({ location: target, map: mapCopy });
+
+  const removedObj = startTile?.shift();
+  targetTile?.unshift(removedObj);
+  return mapCopy;
+}
+
+function mapToCoordinateTilePairs(tileMap) {
+  return tileMap
+    .map((row, yIdx) => row.map((tile, xIdx) => [{ x: xIdx, y: yIdx }, tile]))
     .flat(1);
+}
 
-  const [foundPlayerCoords, _icon] = coordTilePairs.filter(
-    ([_coords, icon]) => {
-      return icon === "K";
-    }
-  )[0] || [undefined, ""];
-
+function deepCopyMap(map) {
   return {
-    worldmap: mapArray,
-    playerLocation: foundPlayerCoords,
-    asString: function () {
-      return this.worldmap
-        .map((row) => row.map((tile) => getTopIcon(tile)).join(""))
-        .join("\n");
-    },
-    move: function (direction) {
-      if (this.playerLocation === undefined) {
-        return { ...this };
-      }
-      const target = getAdjacentLocation({
-        location: this.playerLocation,
-        direction,
-      });
-      const mapCopy = {
-        ...this,
-        worldmap: this.worldmap.map((row) =>
-          row.map((tile) => tile.map((obj) => ({ ...obj })))
-        ),
-      };
-      const playerTile =
-        mapCopy.worldmap?.[this.playerLocation.y]?.[
-          this.playerLocation.x
-        ]?.shift();
-      mapCopy.worldmap?.[target.y]?.[target.x]?.unshift(playerTile);
-      return mapCopy;
-    },
+    ...map,
+    worldmap: map.worldmap.map((row) =>
+      row.map((tile) => tile.map((obj) => ({ ...obj })))
+    ),
   };
+}
+
+function getTileAt({ location, map }) {
+  return map.worldmap[location.y]?.[location.x] || emptyTileSet();
 }
 
 function isPlayer(icon) {
@@ -119,6 +148,9 @@ function defaultTile() {
 }
 function emptyTile() {
   return { icon: "0" };
+}
+function emptyTileSet() {
+  return [emptyTile()];
 }
 function getTopIcon(tile) {
   return tile[0]?.icon;
