@@ -87,8 +87,26 @@ describe("worldmap", () => {
     ].forEach(([direction, expectedMap]) => {
       describe(`on move ${direction}`, () => {
         const newMap = map.move(direction);
-        it(`should move player one tile ${direction}`, () => {
+        it(`should put player one tile ${direction}`, () => {
           expectMap(newMap, expectedMap);
+        });
+      });
+      describe(`on move twice`, () => {
+        const rightDown = map.move("right").move("down");
+        const upLeft = map.move("up").move("left");
+        it(`should put player two tiles in the correct direction`, () => {
+          expectMap(
+            rightDown,
+            `...
+              ...
+              ..K`
+          );
+          expectMap(
+            upLeft,
+            `K..
+              ...
+              ...`
+          );
         });
       });
     });

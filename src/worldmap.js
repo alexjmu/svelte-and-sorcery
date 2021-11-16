@@ -2,7 +2,8 @@
 
 // NxN array of arrays with a tile map for each level (e.g. [mob, floor])
 // 'tiles' contain { icon } -> info about the character or glyph that represents them
-const globalMap = parseMap(`
+const globalVar = {};
+globalVar.globalMap = parseMap(`
 #G_#_,,#GG#TTTT..TTTT.......................
 #__#______#..........T......................
 #UU#______#............T....................
@@ -52,7 +53,12 @@ __________#.G...............................
 ............................................
 `);
 
-const { worldmap } = globalMap;
+const playerLocation = { x: 15, y: 5 };
+const setWorldmap = (newGlobalMap) => {
+  globalVar.globalMap = newGlobalMap;
+};
+const getIconAt = (location) =>
+  getTopIcon(getTileAt({ location, map: globalVar.globalMap }));
 
 function parseMap(mapString2D) {
   const tileMap = stringToTileMap(mapString2D);
@@ -115,6 +121,7 @@ function applyMoveToMap({ map, startLocation, direction }) {
 
   const removedObj = startTile?.shift();
   targetTile?.unshift(removedObj);
+  mapCopy.playerLocation = target;
   return mapCopy;
 }
 
@@ -127,9 +134,9 @@ function mapToCoordinateTilePairs(tileMap) {
 function deepCopyMap(map) {
   return {
     ...map,
-    worldmap: map.worldmap.map((row) =>
-      row.map((tile) => tile.map((obj) => ({ ...obj })))
-    ),
+    worldmap: map.worldmap.map((row) => [
+      ...row.map((tile) => [...tile.map((obj) => ({ ...obj }))]),
+    ]),
   };
 }
 
@@ -155,25 +162,6 @@ function emptyTileSet() {
 function getTopIcon(tile) {
   return tile[0]?.icon;
 }
-const playerLocation = { x: 15, y: 5 };
-
-const getIconAt = ({ x, y }) => worldmap[y]?.[x]?.[0]?.icon;
-const popTileAt = ({ x, y }) => worldmap[y]?.[x]?.shift() || emptyTile();
-const placeTileAt = ({ tile, location }) =>
-  (tile !== undefined ||
-    (() => {
-      throw Error(`cannot place undefined tile at ${location}`);
-    })()) &&
-  worldmap[location.y]?.[location.x]?.unshift(tile) &&
-  location;
-
-const canMoveOver = ({ x, y }) => isPlatform(getIconAt({ x, y }));
-const moveTile = ({ from, to }) => {
-  if (canMoveOver({ ...to })) {
-    const tile = popTileAt({ ...from });
-    return placeTileAt({ tile, location: to });
-  }
-};
 
 const getAdjacentLocation = ({ location, direction }) => {
   const moveVector =
@@ -194,13 +182,9 @@ const getAdjacentLocation = ({ location, direction }) => {
 
 const walkDirection = ({ location, direction }) => {
   const target = getAdjacentLocation({ location, direction });
-  const finalLocation =
-    moveTile({
-      from: location,
-      to: target,
-    }) || location;
+  setWorldmap(globalVar.globalMap.move(direction));
 
-  return finalLocation;
+  return target; // todo canMove() regression
 };
 
 export { getIconAt, walkDirection, parseMap, playerLocation };
