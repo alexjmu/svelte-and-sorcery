@@ -1,5 +1,7 @@
 "use strict";
 
+import { getAllContexts } from "svelte";
+
 // NxN array of arrays with a tile map for each level (e.g. [mob, floor])
 // 'tiles' contain { icon } -> info about the character or glyph that represents them
 const globalVar = {};
@@ -53,7 +55,7 @@ __________#.G...............................
 ............................................
 `);
 
-const playerLocation = { x: 15, y: 5 };
+const playerLocation = findPlayerInMap(globalVar.globalMap.worldmap);
 const setWorldmap = (newGlobalMap) => {
   globalVar.globalMap = newGlobalMap;
 };
@@ -119,9 +121,11 @@ function applyMoveToMap({ map, startLocation, direction }) {
   });
   const targetTile = getTileAt({ location: target, map: mapCopy });
 
-  const removedObj = startTile?.shift();
-  targetTile?.unshift(removedObj);
-  mapCopy.playerLocation = target;
+  if (canMove(targetTile)) {
+    const removedPlayer = startTile?.shift();
+    targetTile?.unshift(removedPlayer);
+    mapCopy.playerLocation = target;
+  }
   return mapCopy;
 }
 
@@ -144,11 +148,19 @@ function getTileAt({ location, map }) {
   return map.worldmap[location.y]?.[location.x] || emptyTileSet();
 }
 
+function canMove(mapTile) {
+  let icon = getTopIcon(mapTile);
+  return [isPlatform, isSmall].some((isType) => isType(icon));
+}
+
 function isPlayer(icon) {
   return icon === "K";
 }
 function isPlatform(icon) {
-  return [".", "_"].includes(icon) || icon === "+";
+  return [".", "_"].includes(icon);
+}
+function isSmall(icon) {
+  return [",", "+"].includes(icon);
 }
 function defaultTile() {
   return { icon: "." };
@@ -180,11 +192,9 @@ const getAdjacentLocation = ({ location, direction }) => {
   };
 };
 
-const walkDirection = ({ location, direction }) => {
-  const target = getAdjacentLocation({ location, direction });
+const walkDirection = ({ direction }) => {
   setWorldmap(globalVar.globalMap.move(direction));
-
-  return target; // todo canMove() regression
+  return globalVar.globalMap.playerLocation;
 };
 
 export { getIconAt, walkDirection, parseMap, playerLocation };

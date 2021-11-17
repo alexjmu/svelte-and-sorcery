@@ -40,7 +40,7 @@ describe("worldmap", () => {
     describe("when move is given", () => {
       const newMap = map.move("right");
       it("should change nothing", () => {
-        expect(newMap).toEqual(map);
+        expectMapToBe(newMap, map.asString());
       });
     });
   });
@@ -88,20 +88,20 @@ describe("worldmap", () => {
       describe(`on move ${direction}`, () => {
         const newMap = map.move(direction);
         it(`should put player one tile ${direction}`, () => {
-          expectMap(newMap, expectedMap);
+          expectMapToBe(newMap, expectedMap);
         });
       });
       describe(`on move twice`, () => {
         const rightDown = map.move("right").move("down");
         const upLeft = map.move("up").move("left");
         it(`should put player two tiles in the correct direction`, () => {
-          expectMap(
+          expectMapToBe(
             rightDown,
             `...
               ...
               ..K`
           );
-          expectMap(
+          expectMapToBe(
             upLeft,
             `K..
               ...
@@ -111,9 +111,57 @@ describe("worldmap", () => {
       });
     });
   });
+
+  describe("tiles you can't walk over", () => {
+    [
+      ["null tile", "0"],
+      ["wall", "#"],
+    ].forEach(([thing, icon]) => {
+      const playerAndThing = "K" + icon;
+      describe(`given map ${playerAndThing}`, () => {
+        const map = world.parseMap(playerAndThing);
+        describe(`when player moves into ${thing}`, () => {
+          const newMap = map.move("right");
+          it("should not move", () => {
+            expectMapToBe(newMap, playerAndThing);
+          });
+        });
+      });
+    });
+  });
+
+  describe(`tiles you can walk over`, () => {
+    [
+      ["gate", "+"],
+      ["food", ","],
+      ["platform", "_"],
+    ].forEach(([thing, icon]) => {
+      const playerNextToThing = ["K", icon, "."].join("");
+      describe(`given map ${playerNextToThing}`, () => {
+        const map = world.parseMap(playerNextToThing);
+        describe(`when player moves into ${thing}`, () => {
+          const newMap = map.move("right");
+          it("should put player on top", () => {
+            expectMapToBe(newMap, ".K.");
+          });
+        });
+        describe(`when player moves past ${thing}`, () => {
+          const newMap = map.move("right").move("right");
+          it("should not move", () => {
+            const thingInTheMiddle = RegExp(`.${icon}.`);
+            expect(newMap.asString()).toMatch(thingInTheMiddle);
+          });
+          it("should let player go to other side", () => {
+            const playerAcross = RegExp(`..K`);
+            expect(newMap.asString()).toMatch(playerAcross);
+          });
+        });
+      });
+    });
+  });
 });
 
-function expectMap(map, repr) {
+function expectMapToBe(map, repr) {
   expect(map.asString()).toEqual(world.parseMap(repr).asString());
 }
 

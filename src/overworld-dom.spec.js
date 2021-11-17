@@ -20,14 +20,15 @@ describe("Overworld", () => {
   });
 
   describe("when I press up arrow key", () => {
-    test("should move me upwards", async () => {
+    test("should move me to edge of map", async () => {
       const elem = getByText("K"); // anywhere in the page
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 20; i++) {
         await fireEvent.keyDown(elem, { key: "ArrowUp" });
         await fireEvent.keyUp(elem);
       }
       // edge of map '0' nulls
       expect(comp.getAllByText("0")[0]).toBeInTheDocument();
+      expect(getByText("K")).toBeInTheDocument();
     });
   });
 

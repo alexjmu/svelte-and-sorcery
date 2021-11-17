@@ -41,10 +41,10 @@
 </script>
 
 <Controls
-	on:left="{() => { curLocation = walkDirection({location: curLocation, direction: 'left'}) }}"
-	on:right="{() => { curLocation = walkDirection({location: curLocation, direction: 'right'}) }}"
-	on:up="{() => { curLocation = walkDirection({location: curLocation, direction: 'up'}) }}"
-	on:down="{() => { curLocation = walkDirection({location: curLocation, direction: 'down'}) }}"
+	on:left="{() => { curLocation = walkDirection({ direction: 'left'}) }}"
+	on:right="{() => { curLocation = walkDirection({ direction: 'right'}) }}"
+	on:up="{() => { curLocation = walkDirection({ direction: 'up'}) }}"
+	on:down="{() => { curLocation = walkDirection({ direction: 'down'}) }}"
 />
 <div id="view">
 <h1>
