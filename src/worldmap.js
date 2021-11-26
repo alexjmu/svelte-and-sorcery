@@ -7,18 +7,18 @@ import { getAllContexts } from "svelte";
 const globalVar = {};
 globalVar.globalMap = parseMap(`
 #G_#_,,#GG#TTTT..TTTT.......................
-#__#______#..........T......................
-#UU#______#............T....................
-##+#______#.................................
-__________#.G...............................
-##__GG____+....K............................
-#,,#______#.G...............................
-#,,_______#..T.......TT.....................
-#__G______#.T.......TT......................
-#GG______G#........T........................
-###########......TTT........................
-................T...........................
-............TT..T...........................
+#__#______#TT..T.....T......................
+#UU#______#T.T.........T....................
+##+#______#T...T.T.T......TT................
+__________#.G.....T.........................
+##__GG____+....K........T...................
+#,,#______#TG.......T.......T...............
+#,,_______#TTT....T..TT.....................
+#__G______#TTT......TT..TT..T...............
+#GG______G#TT.T....T.....TT.................
+###########T.TT..TTT......T.................
+............T...T...........................
+...........TTT..T...........................
 ............................................
 ............................................
 ............................................
@@ -79,6 +79,9 @@ function parseMap(mapString2D) {
         direction,
       });
     },
+    tick: function () {
+      return moveGoblins({ map: this });
+    },
   };
 }
 
@@ -108,24 +111,72 @@ function findPlayerInMap(tileMap) {
   return foundPlayerCoordinates;
 }
 
+function findInMap({ tileMap, isMatch }) {
+  const foundCoordinates = mapToCoordinateTilePairs(tileMap)
+    .map(([coord, tile]) => [coord, tile[0].icon])
+    .filter(([_, icon]) => isMatch(icon))
+    .map(([coords, _]) => coords);
+  return foundCoordinates;
+}
+
 function applyMoveToMap({ map, startLocation, direction }) {
-  const mapCopy = deepCopyMap(map);
   if (startLocation === undefined) {
-    return mapCopy;
+    return deepCopyMap(map);
   }
-  const startTile = getTileAt({ location: startLocation, map: mapCopy });
 
   const target = getAdjacentLocation({
     location: startLocation,
     direction,
   });
-  const targetTile = getTileAt({ location: target, map: mapCopy });
 
-  if (canMove(targetTile)) {
-    const removedPlayer = startTile?.shift();
-    targetTile?.unshift(removedPlayer);
-    mapCopy.playerLocation = target;
+  // TODO: 'valid' movement or logic should be at outer abstraction layer
+  let newMap;
+  if (canMoveToLocation({ location: target, map })) {
+    newMap = moveItemFromTo({
+      fromLocation: startLocation,
+      toLocation: target,
+      map,
+    });
+    newMap.playerLocation = target;
+  } else {
+    newMap = deepCopyMap(map);
   }
+  return newMap;
+}
+
+function moveItemFromTo({ fromLocation, toLocation, map }) {
+  const mapCopy = deepCopyMap(map);
+  const fromTile = getTileAt({ location: fromLocation, map: mapCopy });
+  const toTile = getTileAt({ location: toLocation, map: mapCopy });
+  if (fromTile !== undefined && toTile !== undefined) {
+    toTile.unshift(fromTile.shift());
+  } else {
+    throw new Error("tried to move thing from or to non-existent tile");
+  }
+  return mapCopy;
+}
+
+function moveGoblins({ map }) {
+  const goblinLocations = findInMap({
+    tileMap: map.worldmap,
+    isMatch: (icon) => icon === "G",
+  });
+  const mapCopy = goblinLocations
+    .map((location) => {
+      const locationRight = getAdjacentLocation({
+        location,
+        direction: "right",
+      });
+      return { fromLocation: location, toLocation: locationRight };
+    })
+    .filter(({ toLocation }) =>
+      canMoveToLocation({ location: toLocation, map })
+    )
+    .reduce(
+      (newMap, { fromLocation, toLocation }) =>
+        moveItemFromTo({ fromLocation, toLocation, map: newMap }),
+      map
+    );
   return mapCopy;
 }
 
@@ -148,6 +199,11 @@ function getTileAt({ location, map }) {
   return map.worldmap[location.y]?.[location.x] || emptyTileSet();
 }
 
+// TODO: canMove() can be public function of tiles module
+function canMoveToLocation({ location, map }) {
+  const mapTile = getTileAt({ location, map });
+  return canMove(mapTile);
+}
 function canMove(mapTile) {
   let icon = getTopIcon(mapTile);
   return [isPlatform, isSmall].some((isType) => isType(icon));

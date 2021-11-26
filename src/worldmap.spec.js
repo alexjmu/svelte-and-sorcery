@@ -23,6 +23,8 @@ describe("worldmap", () => {
         it("should return map object", () => {
           expect(map).toMatchObject({
             asString: expect.anything(),
+            move: expect.anything(),
+            tick: expect.anything(),
           });
         });
         it("should unparse to the same string representation", () => {
@@ -32,81 +34,83 @@ describe("worldmap", () => {
     });
   });
 
-  describe("given a map with no player tile", () => {
-    const map = world.parseMap(`
-          ...
-          ...
-          ...`);
-    describe("when move is given", () => {
-      const newMap = map.move("right");
-      it("should change nothing", () => {
-        expectMapToBe(newMap, map.asString());
-      });
-    });
-  });
-
-  describe("given a map with a player tile", () => {
-    const map = world.parseMap(`
-        ...
-        .K.
-        ...
-      `);
-    [
-      [
-        "right",
-        `
-        ...
-        ..K
-        ...
-        `,
-      ],
-      [
-        "left",
-        `
-        ...
-        K..
-        ...
-        `,
-      ],
-      [
-        "up",
-        `
-        .K.
-        ...
-        ...
-        `,
-      ],
-      [
-        "down",
-        `
-        ...
-        ...
-        .K.
-        `,
-      ],
-    ].forEach(([direction, expectedMap]) => {
-      describe(`on move ${direction}`, () => {
-        const newMap = map.move(direction);
-        it(`should put player one tile ${direction}`, () => {
-          expectMapToBe(newMap, expectedMap);
+  describe("player movement commands", () => {
+    describe("given a map with no player tile", () => {
+      const map = world.parseMap(`
+            ...
+            ...
+            ...`);
+      describe("when move is given", () => {
+        const newMap = map.move("right");
+        it("should change nothing", () => {
+          expectMapToBe(newMap, map.asString());
         });
       });
-      describe(`on move twice`, () => {
-        const rightDown = map.move("right").move("down");
-        const upLeft = map.move("up").move("left");
-        it(`should put player two tiles in the correct direction`, () => {
-          expectMapToBe(
-            rightDown,
-            `...
-              ...
-              ..K`
-          );
-          expectMapToBe(
-            upLeft,
-            `K..
-              ...
-              ...`
-          );
+    });
+
+    describe("given a map with a player tile", () => {
+      const map = world.parseMap(`
+          ...
+          .K.
+          ...
+        `);
+      [
+        [
+          "right",
+          `
+          ...
+          ..K
+          ...
+          `,
+        ],
+        [
+          "left",
+          `
+          ...
+          K..
+          ...
+          `,
+        ],
+        [
+          "up",
+          `
+          .K.
+          ...
+          ...
+          `,
+        ],
+        [
+          "down",
+          `
+          ...
+          ...
+          .K.
+          `,
+        ],
+      ].forEach(([direction, expectedMap]) => {
+        describe(`on move ${direction}`, () => {
+          const newMap = map.move(direction);
+          it(`should put player one tile ${direction}`, () => {
+            expectMapToBe(newMap, expectedMap);
+          });
+        });
+        describe(`on move twice`, () => {
+          const rightDown = map.move("right").move("down");
+          const upLeft = map.move("up").move("left");
+          it(`should put player two tiles in the correct direction`, () => {
+            expectMapToBe(
+              rightDown,
+              `...
+                ...
+                ..K`
+            );
+            expectMapToBe(
+              upLeft,
+              `K..
+                ...
+                ...`
+            );
+          });
         });
       });
     });
@@ -116,6 +120,7 @@ describe("worldmap", () => {
     [
       ["null tile", "0"],
       ["wall", "#"],
+      ["tree", "T"],
     ].forEach(([thing, icon]) => {
       const playerAndThing = "K" + icon;
       describe(`given map ${playerAndThing}`, () => {
@@ -155,6 +160,39 @@ describe("worldmap", () => {
             const playerAcross = RegExp(`..K`);
             expect(newMap.asString()).toMatch(playerAcross);
           });
+        });
+      });
+    });
+  });
+
+  describe(`goblin ai`, () => {
+    describe("given a goblin in an empty space", () => {
+      const map = world.parseMap(`
+      ...
+      .G.
+      ...
+      `);
+      describe("when time passes", () => {
+        const mapLater = map.tick();
+        it("should move", () => {
+          expect(map.asString()).not.toEqual(mapLater.asString());
+        });
+      });
+    });
+    describe("given a goblin next to walls", () => {
+      const map = world.parseMap(`
+      ###
+      #G#
+      ###
+      `);
+      describe("when time passes", () => {
+        const ticks = 10;
+        const mapLater = Array.from({ length: ticks }).reduce(
+          (currentMap, _) => currentMap.tick(),
+          map
+        );
+        it("should not move into walls", () => {
+          expectMapToBe(mapLater, map.asString());
         });
       });
     });
