@@ -7,6 +7,17 @@
 	import { getIconAt, playerLocation, tickEvent, walkDirection } from './worldmap.js';
 	
 	let curLocation = playerLocation;
+	let controllerDirection = undefined;
+	$: { if (controllerDirection !== undefined) {
+		actionPlayerCommand();
+	}}
+	function actionPlayerCommand() {
+		// todo: has ticked in 250 interval - then don't action in onMount() below
+		tickEvent();
+		curLocation = controllerDirection ?
+			walkDirection({ direction: controllerDirection })
+			: { ...curLocation };
+	}
 	function idxToMap({ loc, idx }) {
 		let yDiff = idx % 11; // cells run top to bottom
 		let xDiff = Math.floor(idx / 11);
@@ -19,22 +30,23 @@
 	
 	let frame = 0;
 	onMount(() => {
-		const interval = setInterval(() => { frame = frame + 1 }, 1000)
-		return () => clearInterval(interval)
+		const tileFrameInterval = setInterval(() => { frame = frame + 1 }, 1000);
+		const tickInterval = setInterval(() => {
+			actionPlayerCommand()
+		}, 200);
+		return () => {
+			clearInterval(tileFrameInterval);
+			clearInterval(tickInterval);
+		}
 	});
-	function tick() {
-		// TODO: test! not redrawing frame
-		tickEvent();
-		//curLocation = { ...curLocation };
-		frame = frame + 1;
-	}
 </script>
 
 <Controls
-	on:left="{() => { curLocation = walkDirection({ direction: 'left'}) }}"
-	on:right="{() => { curLocation = walkDirection({ direction: 'right'}) }}"
-	on:up="{() => { curLocation = walkDirection({ direction: 'up'}) }}"
-	on:down="{() => { curLocation = walkDirection({ direction: 'down'}) }}"
+	on:left="{() => { controllerDirection = 'left' }}"
+	on:right="{() => { controllerDirection = 'right' }}"
+	on:up="{() => { controllerDirection = 'up' }}"
+	on:down="{() => { controllerDirection = 'down'; }}"
+	on:none="{() => { controllerDirection = undefined; }}"
 />
 <div id="view">
 <h1>

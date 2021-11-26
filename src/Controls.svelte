@@ -8,7 +8,7 @@
 		'ArrowRight': 'right',
 		'ArrowUp': 'up',
 		'ArrowDown': 'down'
-	}[pressedKey]) : null
+	}[pressedKey]) : dispatch('none')
 	
 	function handleKeydown({key}) {
 		pressedKey = key 

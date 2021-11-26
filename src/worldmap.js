@@ -81,7 +81,7 @@ function parseMap(mapString2D) {
               location: this.playerLocation,
               direction,
             }),
-          }) // .tick()
+          })
         : deepCopyMap(this);
     },
     tick: function (amount) {
