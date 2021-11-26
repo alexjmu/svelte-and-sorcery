@@ -31,9 +31,10 @@
 	let frame = 0;
 	onMount(() => {
 		const tileFrameInterval = setInterval(() => { frame = frame + 1 }, 1000);
+		// TODO: should be in a component above <Controls> that interfaces with the game state
 		const tickInterval = setInterval(() => {
 			actionPlayerCommand()
-		}, 200);
+		}, 500);
 		return () => {
 			clearInterval(tileFrameInterval);
 			clearInterval(tickInterval);

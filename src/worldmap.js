@@ -166,7 +166,9 @@ function moveGoblins({ map }) {
     .map((location) => {
       const locationRight = getAdjacentLocation({
         location,
-        direction: "right",
+        direction: ["right", "left", "up", "down"][
+          Math.floor(Math.random() * 4)
+        ],
       });
       return { fromLocation: location, toLocation: locationRight };
     })
