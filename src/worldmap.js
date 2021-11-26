@@ -73,14 +73,22 @@ function parseMap(mapString2D) {
       return tileMapToString(this.worldmap);
     },
     move: function (direction) {
-      return applyMoveToMap({
-        map: this,
-        startLocation: this.playerLocation,
-        direction,
-      });
+      return this.playerLocation !== undefined
+        ? applyPlayerMoveToMap({
+            map: this,
+            fromLocation: this.playerLocation,
+            toLocation: getAdjacentLocation({
+              location: this.playerLocation,
+              direction,
+            }),
+          }) // .tick()
+        : deepCopyMap(this);
     },
-    tick: function () {
-      return moveGoblins({ map: this });
+    tick: function (amount) {
+      return Array.from({ length: amount !== undefined ? amount : 1 }).reduce(
+        (currentMap, _) => applyTickToMap({ map: currentMap }),
+        this
+      );
     },
   };
 }
@@ -119,29 +127,22 @@ function findInMap({ tileMap, isMatch }) {
   return foundCoordinates;
 }
 
-function applyMoveToMap({ map, startLocation, direction }) {
-  if (startLocation === undefined) {
-    return deepCopyMap(map);
-  }
+function applyTickToMap({ map }) {
+  return moveGoblins({ map });
+}
 
-  const target = getAdjacentLocation({
-    location: startLocation,
-    direction,
-  });
-
-  // TODO: 'valid' movement or logic should be at outer abstraction layer
-  let newMap;
-  if (canMoveToLocation({ location: target, map })) {
-    newMap = moveItemFromTo({
-      fromLocation: startLocation,
-      toLocation: target,
-      map,
-    });
-    newMap.playerLocation = target;
-  } else {
-    newMap = deepCopyMap(map);
-  }
-  return newMap;
+function applyPlayerMoveToMap({ map, fromLocation, toLocation }) {
+  return fromLocation !== undefined &&
+    canMoveToLocation({ location: toLocation, map })
+    ? {
+        ...moveItemFromTo({
+          fromLocation,
+          toLocation,
+          map,
+        }),
+        playerLocation: toLocation,
+      }
+    : deepCopyMap(map);
 }
 
 function moveItemFromTo({ fromLocation, toLocation, map }) {
@@ -161,7 +162,7 @@ function moveGoblins({ map }) {
     tileMap: map.worldmap,
     isMatch: (icon) => icon === "G",
   });
-  const mapCopy = goblinLocations
+  const movements = goblinLocations
     .map((location) => {
       const locationRight = getAdjacentLocation({
         location,
@@ -171,12 +172,12 @@ function moveGoblins({ map }) {
     })
     .filter(({ toLocation }) =>
       canMoveToLocation({ location: toLocation, map })
-    )
-    .reduce(
-      (newMap, { fromLocation, toLocation }) =>
-        moveItemFromTo({ fromLocation, toLocation, map: newMap }),
-      map
     );
+  const mapCopy = movements.reduce(
+    (newMap, { fromLocation, toLocation }) =>
+      moveItemFromTo({ fromLocation, toLocation, map: newMap }),
+    map
+  );
   return mapCopy;
 }
 
@@ -252,5 +253,8 @@ const walkDirection = ({ direction }) => {
   setWorldmap(globalVar.globalMap.move(direction));
   return globalVar.globalMap.playerLocation;
 };
+const tickEvent = () => {
+  setWorldmap(globalVar.globalMap.tick());
+};
 
-export { getIconAt, walkDirection, parseMap, playerLocation };
+export { getIconAt, walkDirection, tickEvent, parseMap, playerLocation };

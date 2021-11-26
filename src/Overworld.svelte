@@ -4,7 +4,7 @@
 	import Tile from './Tile.svelte';
 	import Controls from './Controls.svelte';
 	
-	import { getIconAt, playerLocation, walkDirection } from './worldmap.js';
+	import { getIconAt, playerLocation, tickEvent, walkDirection } from './worldmap.js';
 	
 	let curLocation = playerLocation;
 	function idxToMap({ loc, idx }) {
@@ -22,22 +22,12 @@
 		const interval = setInterval(() => { frame = frame + 1 }, 1000)
 		return () => clearInterval(interval)
 	});
-
 	function tick() {
-		// TODO
-		console.warn('tick() not impl');
+		// TODO: test! not redrawing frame
+		tickEvent();
+		//curLocation = { ...curLocation };
+		frame = frame + 1;
 	}
-	
-// thoughts: maybe scroll left/right instead of moving K? i.e. view is an nxn array projection from
-// an NxN world
-// maybe allow holding down a key, but at a controlled speed? i.e. only moving one per "turn"
-// also "turn" should be the actual tick speed of npcs, not the "frame"^ used for tile animation
-// basically: should this be turn based or real-time? I'm thinking the latter because it's more fun
-// add: unicorns that can hurt you, goblins, some rocks/caves/trees/things to navigate around
-// finally add: some free online looping music (or make some?)
-// should probably save every 100 ticks (can use a writeable store attached to localstorage + JSONify)
-// boss fight with MMMMMMMM
-// thought: all player state could be a writeable store that tracks history?
 </script>
 
 <Controls

@@ -173,7 +173,7 @@ describe("worldmap", () => {
       ...
       `);
       describe("when time passes", () => {
-        const mapLater = map.tick();
+        const mapLater = map.tick(10);
         it("should move", () => {
           expect(map.asString()).not.toEqual(mapLater.asString());
         });
@@ -186,11 +186,7 @@ describe("worldmap", () => {
       ###
       `);
       describe("when time passes", () => {
-        const ticks = 10;
-        const mapLater = Array.from({ length: ticks }).reduce(
-          (currentMap, _) => currentMap.tick(),
-          map
-        );
+        const mapLater = map.tick(10);
         it("should not move into walls", () => {
           expectMapToBe(mapLater, map.asString());
         });
