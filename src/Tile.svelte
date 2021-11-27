@@ -3,41 +3,45 @@
 	
 	export let type = '.';
 	export let switched = false;
+	export let location = undefined;
 	
+	const pickCachedIconSet = makePickCachedIconSet();
+	let currentTileSet;
+	$: currentTileSet = pickCachedIconSet({ type, location });
 	let currentTile;
+	$: currentTile = currentTileSet[switched ? 0 : 1];
 	
 	const types = {
-		'.': ['.', '.'],//[['o', '*'], ['*', 'o']],
+		'.': [['.', '.'], [' ', ' '], [' ', ' ']],
 		'_': [['_', '_'], ['-', '-']],
-		'T': [['T', 't'], ['t', 'T'], ['T', 'T']],
-		'K': ['K', 'k'],
-		'G': ['G', 'g'],
+		'T': [['T', 'T'], ['t', 'T'], ['T', 't']],
+		'K': ['k', 'k'],
+		'G': [['g', 'G'], ['G', 'G'], ['G', 'G']],
 		'U': [['U', 'u'], ['u', 'U']],
 		'#': ['#', '#'],
 		',': [',', ','],
 		'+': ['+', '+'],
-		null: ['0', '0']
+		'0': [['0', '0'], ['0', '0'], ['*', '*']]
 	}
-	const savedRandomVersions = {};
-	function getTileset(type) {
-			const list = types[type] || [type, type]; // todo: DEBUG
-			if (list === undefined) {
-				throw Error(`unknown tile type '${type}'`)
-			}
-			else if (Array.isArray(list[0])) {
-				let version = savedRandomVersions[type] === undefined ?
-						Math.floor(Math.random() * list.length) :
-						savedRandomVersions[type];
-				savedRandomVersions[type] = version;
-				return list[version];
-			} else {
-				return list;
-			}
+	function getIconSets({ type }) {
+		const iconSets = types[type]
+			|| (() => { throw Error(`unknown Tile icon type ${type}`); })();
+		const isMultipleSets = Array.isArray(iconSets[0]);
+		return isMultipleSets ? iconSets : [iconSets];
 	}
-	
-	$: {
-		const tileset = getTileset(type);
-		currentTile = tileset[switched ? 0 : 1];
+	function makePickCachedIconSet() {
+		const cache = {};
+		const pickCachedIconSet = ({ type, location }) => {
+			const hash = `${type}-${location.x}-${location.y}`;
+			if (cache[hash]) {
+				return cache[hash];
+			}
+			const iconSets = getIconSets({ type });
+			const randomSet = iconSets[Math.floor(Math.random() * iconSets.length)];
+			cache[hash] = randomSet;
+			return randomSet;
+		}
+		return pickCachedIconSet;
 	}
 </script>
 

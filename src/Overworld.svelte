@@ -8,16 +8,58 @@
 	
 	let curLocation = playerLocation;
 	let controllerDirection = undefined;
-	$: { if (controllerDirection !== undefined) {
-		actionPlayerCommand();
-	}}
-	function actionPlayerCommand() {
-		// todo: has ticked in 250 interval - then don't action in onMount() below
-		tickEvent();
+	$: { (controllerDirection || true) && tickAndRedrawIdempotent() }
+	let frame = 0;
+	// frame = 0;
+	//$: frame = !!controllerDirection ? 0 : 0;
+	const tickAndRedrawIdempotent = (() => {
+		let hasTriggeredThisTick = false;
+		
+		return (newTickStarting) => {
+			if (canAction(!!newTickStarting)) {
+				setTrigger(newTickStarting);
+				tickEvent();
+				movePlayerAndRedraw();
+			}
+		}
+
+		function canAction(newTickStarting) {
+			return !hasTriggeredThisTick || newTickStarting;
+		}
+		function setTrigger(newTickStarting) {
+			if (newTickStarting) {
+				hasTriggeredThisTick = false;
+			} else {
+				hasTriggeredThisTick = true;
+			}
+		}
+	})();
+	function movePlayerAndRedraw() {
 		curLocation = controllerDirection ?
 			walkDirection({ direction: controllerDirection })
 			: { ...curLocation };
 	}
+	onMount(() => {
+		const tileFrameInterval = setInterval(() => { frame = frame + 1 }, 1000);
+		const tickInterval = setInterval(() => {
+			tickAndRedrawIdempotent(true);
+		}, 100);
+		return () => {
+			clearInterval(tileFrameInterval);
+			clearInterval(tickInterval);
+		}
+	});
+
+	let viewportCoords;
+	$: viewportCoords = Array.from({length: 11 * 11}).map((_, idx) => {
+		const location = idxToMap({ loc: curLocation, idx })
+		return {
+			location,
+			icon: getIconAt(location),
+			id: `location(${location.x}, ${location.y})`
+		}
+	})
+
 	function idxToMap({ loc, idx }) {
 		let yDiff = idx % 11; // cells run top to bottom
 		let xDiff = Math.floor(idx / 11);
@@ -27,19 +69,6 @@
 			y: loc.y - 5 + yDiff
 		}
 	}
-	
-	let frame = 0;
-	onMount(() => {
-		const tileFrameInterval = setInterval(() => { frame = frame + 1 }, 1000);
-		// TODO: should be in a component above <Controls> that interfaces with the game state
-		const tickInterval = setInterval(() => {
-			actionPlayerCommand()
-		}, 500);
-		return () => {
-			clearInterval(tileFrameInterval);
-			clearInterval(tickInterval);
-		}
-	});
 </script>
 
 <Controls
@@ -54,8 +83,12 @@
 	Overworld
 </h1>
 <div id="grid">
-	{#each Array.from({length: 11 * 11}) as _cell, idx}
-		<Tile switched="{frame % 2 === 0}" type="{getIconAt(idxToMap({ loc: curLocation, idx })) || null}" />
+	{#each viewportCoords as cell (cell.id)}
+		<Tile
+			switched="{frame % 2 === 0}"
+			location="{cell.location}"
+			type="{cell.icon}"
+			/>
 	{/each}
 </div>
 	<pre>use arrow keys to move</pre>
