@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { types } from './config/tiles.js';
 	
 	export let type = '.';
 	export let switched = false;
@@ -11,18 +12,6 @@
 	let currentTile;
 	$: currentTile = currentTileSet[switched ? 0 : 1];
 	
-	const types = {
-		'.': [['.', '.'], [' ', ' '], [' ', ' ']],
-		'_': [['_', '_'], ['-', '-']],
-		'T': [['T', 'T'], ['t', 'T'], ['T', 't']],
-		'K': ['k', 'K'],
-		'G': [['g', 'G'], ['G', 'g']],
-		'U': [['U', 'u'], ['u', 'U']],
-		'#': ['#', '#'],
-		',': [',', ','],
-		'+': ['+', '+'],
-		'0': [['0', '0'], ['0', '0'], ['*', '*']]
-	}
 	function getIconSets({ type }) {
 		const iconSets = types[type]
 			|| (() => { throw Error(`unknown Tile icon type ${type}`); })();
@@ -69,6 +58,9 @@
 	}
 	.T {
 		color: darkgreen;
+	}
+	.w {
+		color: cornflowerblue;
 	}
 	.wall {
 		color: gray;
