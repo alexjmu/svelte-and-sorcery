@@ -121,6 +121,8 @@ describe("worldmap", () => {
       ["null tile", "0"],
       ["wall", "#"],
       ["tree", "T"],
+      ["goblin", "G"],
+      ["map edge", ""],
     ].forEach(([thing, icon]) => {
       const playerAndThing = "K" + icon;
       describe(`given map ${playerAndThing}`, () => {
@@ -140,6 +142,7 @@ describe("worldmap", () => {
       ["gate", "+"],
       ["food", ","],
       ["platform", "_"],
+      ["ground", "."],
     ].forEach(([thing, icon]) => {
       const playerNextToThing = ["K", icon, "."].join("");
       describe(`given map ${playerNextToThing}`, () => {
@@ -166,29 +169,37 @@ describe("worldmap", () => {
   });
 
   describe(`goblin ai`, () => {
-    describe("given a goblin in an empty space", () => {
-      const map = world.parseMap(`
-      ...
-      .G.
-      ...
-      `);
-      describe("when time passes", () => {
-        const mapLater = map.tick(10);
-        it("should move", () => {
-          expect(map.asString()).not.toEqual(mapLater.asString());
+    describe("movement", () => {
+      describe("given a goblin in an empty space", () => {
+        const map = world.parseMap(`
+        ...
+        .G.
+        ...
+        `);
+        describe("when time passes", () => {
+          const nextMaps = getNextTicks(map, 10);
+          it("should eventually move", () => {
+            const didGoblinMove = nextMaps.some(
+              (m) => m.asString() !== map.asString()
+            );
+            expect(didGoblinMove).toBe(true);
+          });
         });
       });
-    });
-    describe("given a goblin next to walls", () => {
-      const map = world.parseMap(`
-      ###
-      #G#
-      ###
-      `);
-      describe("when time passes", () => {
-        const mapLater = map.tick(10);
-        it("should not move into walls", () => {
-          expectMapToBe(mapLater, map.asString());
+      describe("given a goblin next to walls", () => {
+        const map = world.parseMap(`
+        ###
+        #G#
+        ###
+        `);
+        describe("when time passes", () => {
+          const nextMaps = getNextTicks(map, 10);
+          it("should not move into walls", () => {
+            const didGoblinMove = nextMaps.some(
+              (m) => m.asString() !== map.asString()
+            );
+            expect(didGoblinMove).toBe(false);
+          });
         });
       });
     });
@@ -197,6 +208,13 @@ describe("worldmap", () => {
 
 function expectMapToBe(map, repr) {
   expect(map.asString()).toEqual(world.parseMap(repr).asString());
+}
+
+function getNextTicks(map, amount) {
+  return Array.from({ length: amount }).reduce(
+    (prevMaps, _) => [...prevMaps, prevMaps[prevMaps.length - 1].tick()],
+    [map]
+  );
 }
 
 function removeOuterWhitespace(str) {

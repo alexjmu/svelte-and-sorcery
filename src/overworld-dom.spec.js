@@ -1,4 +1,5 @@
 import { render, fireEvent } from "@testing-library/svelte";
+import { select_option } from "svelte/internal";
 import Overworld from "./Overworld.svelte";
 
 /**
@@ -8,27 +9,28 @@ import Overworld from "./Overworld.svelte";
 describe("Overworld", () => {
   let comp;
   let getByText;
+  const testTickInterval = 1;
   beforeEach(() => {
-    comp = render(Overworld);
+    comp = render(Overworld, { TICK_INTERVAL: testTickInterval });
     getByText = comp.getByText;
   });
 
   describe("when looking at the map", () => {
     test("should see myself", () => {
-      expect(getByText("K")).toBeInTheDocument();
+      expect(getByText(/K$/i)).toBeInTheDocument();
     });
   });
 
-  describe("when I press up arrow key", () => {
+  describe("when I hold up arrow key", () => {
     test("should move me to edge of map", async () => {
-      const elem = getByText("K"); // anywhere in the page
-      for (let i = 0; i < 20; i++) {
-        await fireEvent.keyDown(elem, { key: "ArrowUp" });
-        await fireEvent.keyUp(elem);
-      }
+      const elem = getByText(/K$/i); // anywhere in the page
+      await fireEvent.keyDown(elem, { key: "ArrowUp" });
+      await new Promise((resolve) =>
+        setTimeout(resolve, testTickInterval * 10)
+      );
       // edge of map '0' nulls
       expect(comp.getAllByText("0")[0]).toBeInTheDocument();
-      expect(getByText("K")).toBeInTheDocument();
+      expect(getByText(/K$/i)).toBeInTheDocument();
     });
   });
 

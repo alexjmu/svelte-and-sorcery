@@ -84,11 +84,8 @@ function parseMap(mapString2D) {
           })
         : deepCopyMap(this);
     },
-    tick: function (amount) {
-      return Array.from({ length: amount !== undefined ? amount : 1 }).reduce(
-        (currentMap, _) => applyTickToMap({ map: currentMap }),
-        this
-      );
+    tick: function () {
+      return applyTickToMap({ map: this });
     },
   };
 }
@@ -128,33 +125,35 @@ function findInMap({ tileMap, isMatch }) {
 }
 
 function applyTickToMap({ map }) {
-  return moveGoblins({ map });
+  const nextMap = deepCopyMap(map);
+  moveGoblins({ map: nextMap });
+  return nextMap;
 }
 
 function applyPlayerMoveToMap({ map, fromLocation, toLocation }) {
-  return fromLocation !== undefined &&
+  const nextMap = deepCopyMap(map);
+  if (
+    fromLocation !== undefined &&
     canMoveToLocation({ location: toLocation, map })
-    ? {
-        ...moveItemFromTo({
-          fromLocation,
-          toLocation,
-          map,
-        }),
-        playerLocation: toLocation,
-      }
-    : deepCopyMap(map);
+  ) {
+    moveItemFromTo({
+      fromLocation,
+      toLocation,
+      map: nextMap,
+    });
+    nextMap.playerLocation = toLocation;
+  }
+  return nextMap;
 }
 
 function moveItemFromTo({ fromLocation, toLocation, map }) {
-  const mapCopy = deepCopyMap(map);
-  const fromTile = getTileAt({ location: fromLocation, map: mapCopy });
-  const toTile = getTileAt({ location: toLocation, map: mapCopy });
+  const fromTile = getTileAt({ location: fromLocation, map });
+  const toTile = getTileAt({ location: toLocation, map });
   if (fromTile !== undefined && toTile !== undefined) {
     toTile.unshift(fromTile.shift());
   } else {
     throw new Error("tried to move thing from or to non-existent tile");
   }
-  return mapCopy;
 }
 
 function moveGoblins({ map }) {
@@ -175,13 +174,12 @@ function moveGoblins({ map }) {
     .filter(({ toLocation }) =>
       canMoveToLocation({ location: toLocation, map })
     );
-  const mapCopy = movements.reduce(
-    (newMap, { fromLocation, toLocation }) =>
-      moveItemFromTo({ fromLocation, toLocation, map: newMap }),
-    map
+  movements.forEach(({ fromLocation, toLocation }) =>
+    moveItemFromTo({ fromLocation, toLocation, map })
   );
-  return mapCopy;
 }
+
+function getNextGoblinLocation({ goblinLocation }) {}
 
 function mapToCoordinateTilePairs(tileMap) {
   return tileMap

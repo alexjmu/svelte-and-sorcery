@@ -6,6 +6,8 @@
 	
 	import { getIconAt, playerLocation, tickEvent, walkDirection } from './worldmap.js';
 	
+	export let TICK_INTERVAL = 100;
+
 	let curLocation = playerLocation;
 	let controllerDirection = undefined;
 	$: { (controllerDirection || true) && tickAndRedrawIdempotent() }
@@ -43,7 +45,7 @@
 		const tileFrameInterval = setInterval(() => { frame = frame + 1 }, 1000);
 		const tickInterval = setInterval(() => {
 			tickAndRedrawIdempotent(true);
-		}, 100);
+		}, TICK_INTERVAL);
 		return () => {
 			clearInterval(tileFrameInterval);
 			clearInterval(tickInterval);
