@@ -26,10 +26,10 @@ describe("Overworld", () => {
       const elem = getByText(/K$/i); // anywhere in the page
       await fireEvent.keyDown(elem, { key: "ArrowUp" });
       await new Promise((resolve) =>
-        setTimeout(resolve, testTickInterval * 10)
+        setTimeout(resolve, testTickInterval * 50)
       );
-      // edge of map '0' nulls
-      expect(comp.getAllByText("0")[0]).toBeInTheDocument();
+      // edge of default map has water
+      expect(comp.getAllByText(/[wo]$/i)[0]).toBeInTheDocument();
       expect(getByText(/K$/i)).toBeInTheDocument();
     });
   });
