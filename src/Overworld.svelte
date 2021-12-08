@@ -6,14 +6,12 @@
 	
 	import { getIconAt, playerLocation, tickEvent, walkDirection } from './worldmap.js';
 	
-	export let TICK_INTERVAL = 100;
+	export let TICK_INTERVAL = 150;
 
 	let curLocation = playerLocation;
 	let controllerDirection = undefined;
 	$: { (controllerDirection || true) && tickAndRedrawIdempotent() }
 	let frame = 0;
-	// frame = 0;
-	//$: frame = !!controllerDirection ? 0 : 0;
 	const tickAndRedrawIdempotent = (() => {
 		let hasTriggeredThisTick = false;
 		

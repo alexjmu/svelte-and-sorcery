@@ -29,9 +29,9 @@ TTT.TTTTTTTT.TT.T..TTT....T..T.TT.TT..ww..T...w+wwT.TTTTTTTTTTTTT
 TTT.TTTTTTT..T.T.T..T...TT.T.TT..T.T.wTw....T...T.wwTT.TTTTTTTTTT
 TTT..TTTT.TTTT..........TT.TT.TTTTTTwTTTww.........wwTTTTTTTTTTTT
 TTww.TTT.T.......T.T.TTT..T.T.TT.TwwTTTTTTwT.....T#TTwTT.TTTTTTTT
-TTww.........TT..T..TTTTTT.T.T.TwwTTT...TTTw.T...#G#TTwwTTTTTTTTT
-TTTTT#TT....TTTTTTTTTTTTTTT.T.TwTTTTT.U.TTTTw....###TTTTwTTTTTTTT
-TTTTTG#....T..TTTTTTT.TTTT.TTwwTTT......TTT.Tw....TTTT.TTwwTTTTTT
+TTww.........TT..T..TTTTTT.T.T.TwwTTTUUUTTTw.T...#G#TTwwTTTTTTTTT
+TTTTT#TT....TTTTTTTTTTTTTTT.T.TwTTTTTUUUTTTTw....###TTTTwTTTTTTTT
+TTTTTG#....T..TTTTTTT.TTTT.TTwwTTT....U.TTT.Tw....TTTT.TTwwTTTTTT
 TTTT.#.T..TTTTTTTTTTTTTTTTTTwTT....TTTTTTTTTTwwT...TTTTTTTTwTTTTT
 TTTTTTTT..TTTT.TTTT.TTTTTTTwTTT.TTTTTTTTTTTTwwwwwT.TTTTTTTTTTTTTT
 TTTTTTTT..TTTTTTTTTTTTTTTTwTTTT.TTTT.TTTTTTwwwwww..TTTTTTTTTTTTTT
@@ -182,8 +182,6 @@ function moveGoblins({ map }) {
   );
 }
 
-function getNextGoblinLocation({ goblinLocation }) {}
-
 function mapToCoordinateTilePairs(tileMap) {
   return tileMap
     .map((row, yIdx) => row.map((tile, xIdx) => [{ x: xIdx, y: yIdx }, tile]))
@@ -199,7 +197,7 @@ function deepCopyMap(map) {
   };
 }
 
-function getTileAt({ location, map }) {
+export function getTileAt({ location, map }) {
   return map.worldmap[location.y]?.[location.x] || emptyTileSet();
 }
 
@@ -235,7 +233,7 @@ function getTopIcon(tile) {
   return tile[0]?.icon;
 }
 
-const getAdjacentLocation = ({ location, direction }) => {
+export const getAdjacentLocation = ({ location, direction }) => {
   const moveVector =
     {
       left: { x: -1, y: 0 },
