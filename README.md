@@ -1,6 +1,6 @@
 # Svelte and Sorcery
 
-A text-based walking simulator. An experiment to build something fun with:
+A small text-based walking simulator. An experiment to build something fun with:
 
 - Svelte instead of React
 - JavaScript instead of TypeScript
