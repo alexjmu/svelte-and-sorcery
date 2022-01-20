@@ -6,7 +6,7 @@
 </script>
 
 <div id="view">
-	<h1>K\M</h1>
+	<h1>Svelte/Sorcery</h1>
 	<div>
 		<FakeLink on:click="{() => { loading = true; }}"/>
 	</div>

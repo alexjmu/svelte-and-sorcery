@@ -3,7 +3,7 @@
 	import StartMenu from './StartMenu.svelte';
 
 	let scene = 'scene0';
-	// TEST
+	// TEST: skipping the start menu to get to the good stuff :)
 	scene = 'scene1';
 	function startGame() {
 			setTimeout(() => { scene = 'scene1'; }, 500);
