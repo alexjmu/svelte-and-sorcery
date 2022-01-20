@@ -6,6 +6,8 @@ A text-based walking simulator. An experiment to build something fun with:
 - JavaScript instead of TypeScript
 - Html text elements instead of a canvas
 
+![game screenshot](https://raw.githubusercontent.com/alexjmu/svelte-and-sorcery/master/screenshot.png)
+
 The bundled js is about 20KB
 
 ## Install and Run
